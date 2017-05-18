@@ -83,7 +83,7 @@ myApp.populateTeamsData = function()
                                    'concededGoals': game.homeGoals, 
                                    'shots': game.awayShots, 'fouls': game.awayFouls, 'yellow': game.awayYellow, 'red': game.awayRed};
         } else {
-            teams[homeTeamName].results += awayResult;
+            teams[awayTeamName].results += awayResult;
             teams[awayTeamName].scoredGoals += +game.awayGoals;
             teams[awayTeamName].concededGoals += game.homeGoals;
             teams[awayTeamName].shots += game.awayShots;
