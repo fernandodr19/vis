@@ -24,6 +24,7 @@ myApp.readData = function()
         var n = myApp.calculateGamesPlayed('Leicester');
         
         myApp.populateTeamsData();
+        myApp.populateCombo();        
     });
 }
 
@@ -128,10 +129,92 @@ myApp.populateTeamsData = function()
         console.log(teams[name].name + ' - ' + myApp.getTotalScore(teams[name].results));
     }
     
-    console.log('\n\nLeicester:');
-    for(var i = 0; i < teamGames['Leicester'].length; i++) {
-        console.log(teamGames['Leicester'][i].date + ' - ' + myApp.getTotalScore(teamGames['Leicester'][i].results));
+    console.log('\n\nMan United:');
+    for(var i = 0; i < teamGames['Man United'].length; i++) {
+        console.log(teamGames['Man United'][i].date + ' - ' + myApp.getTotalScore(teamGames['Man United'][i].results));
     }
+}
+
+myApp.select = function()
+{
+    myApp.printTable();    
+}
+
+myApp.sortByTotalPoints = function(date)
+{
+    teamNames.sort(function(a, b) {
+        return parseFloat(myApp.getTotalScore(teamGames[b][myApp.indexOfDate(b,date)].results)) 
+            - 
+            parseFloat(myApp.getTotalScore(teamGames[a][myApp.indexOfDate(a,date)].results));
+    });    
+}
+
+myApp.printTable = function()
+{
+    
+    var myTable= "<table><tr><th>Team</th>";
+    myTable+= "<th>Points</th>";
+    myTable+="<th>Goals Pro</th></tr>";
+    var selectedTeam = document.getElementById("selectTeam").value;    
+    
+    var date = document.getElementById("selectDate");
+    
+    var from = date.value.split("-");
+    var inputDate = new Date(from[0], from[1]-1, from[2]); 
+    myApp.sortByTotalPoints(inputDate);
+    var formatDate = ("0" + inputDate.getDate()).slice(-2) + "/" + ("0" + (inputDate.getMonth() + 1)).slice(-2) + "/" + ("0" + inputDate.getFullYear()).slice(-2);
+    
+    for(var i = 0; i < teamNames.length; i++) {
+        var name = teamNames[i];
+        console.log(teams[name].name + ' - ' + myApp.getTotalScore(teams[name].results));
+        
+        if(name == selectedTeam)
+            myTable+="<tr style='background-color: #7bb563 !important;'>";
+        else
+            myTable+="<tr>";
+        
+        myTable+="<td>" + name + "</td>";
+        
+        var index = myApp.indexOfDate(name,inputDate);
+        if(index == -1)
+            myTable+="<td> - </td>";
+        else
+            myTable+="<td>" + myApp.getTotalScore(teamGames[name][index].results) + "</td>";
+        myTable+="<td>" + 10 + "</td></tr>";
+    }
+    
+    myTable+="</table>";
+    
+    document.getElementById('tableDiv').innerHTML = myTable;
+
+}
+
+myApp.indexOfDate = function(name, date)
+{
+    for(var i = 0; i < teamGames[name].length; i++) {
+        var from = teamGames[name][i].date.split("/");    
+        var teamDate = new Date("20" + from[2], from[1]-1, from[0]);  
+        console.log(date + " - " + teamDate);
+        if (teamDate > date)
+            return i - 1;        
+    }
+    return teamGames[name].length - 1;
+}
+
+myApp.populateCombo = function()
+{
+    
+    var select = document.getElementById("selectTeam");
+    teamNames.sort();
+        
+    for(var i = 0; i < teamNames.length; i++) {
+        var opt = teamNames[i];
+        var el = document.createElement("option");
+        el.textContent = opt;
+        el.value = opt;
+        select.appendChild(el);
+    }
+
 }
 
 myApp.getTotalScore = function(results)
