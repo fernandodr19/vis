@@ -4,6 +4,7 @@
     color: darkgrey;
 }
 
+<<<<<<< HEAD
 table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
@@ -18,4 +19,17 @@ td, th {
 
 tr:nth-child(even) {
     background-color: #dddddd;
+=======
+div.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 60px;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
+>>>>>>> f93db8e0ff73bfd6c3a91dc0baae383821134e88
 }
