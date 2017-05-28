@@ -4,6 +4,16 @@
     color: darkgrey;
 }
 
+.zoom{
+    cursor: move;
+    fill: none;
+    pointer-events: all;
+}
+
+line {
+    border : 1px solid black; 
+}
+
 <<<<<<< HEAD
 table {
     font-family: arial, sans-serif;

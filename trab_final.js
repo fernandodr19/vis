@@ -14,6 +14,9 @@ var teams = {};
 var teamNames = [];
 var teamGames = [];
 
+var minDate = undefined;
+var maxDate = undefined;
+
 //SCATERPLOT//
 var sc = {};
 sc.svg = undefined;
@@ -23,6 +26,33 @@ sc.baseY = 100;
 sc.variationX = 20;
 sc.variationY = 20;
 sc.radius = 5;
+
+//TIMESERIES//
+var lineChart = {};
+lineChart.margins       = {top: 20, right: 300, bottom: 110, left: 40};
+lineChart.margins2      = {top: 430, right: 20, bottom: 30, left: 40};
+lineChart.cw            = 960 - lineChart.margins.left - lineChart.margins.right;
+lineChart.ch            = 500 - lineChart.margins.top - lineChart.margins.bottom;
+lineChart.ch2           = 500 - lineChart.margins2.top - lineChart.margins2.bottom;
+lineChart.xLabel        = "Dates";
+lineChart.yLabel        = "Points";
+lineChart.xScale        = undefined;
+lineChart.xScale2       = undefined;
+lineChart.yScale        = undefined;
+lineChart.yScale2       = undefined;
+lineChart.nScaleX       = undefined;
+lineChart.nScaleY       = undefined;
+lineChart.xAxis         = undefined;
+lineChart.xAxis2        = undefined;
+lineChart.yAxis         = undefined;
+lineChart.zoom          = undefined;
+lineChart.brush         = undefined;
+lineChart.colorScale    = undefined;
+lineChart.data          = [];
+lineChart.legend        = [];
+lineChart.count         = undefined;
+lineChart.countTotal    = undefined;
+
 
 myApp.appendSvg = function(div, extraWidth, extraHeight)
 {
@@ -58,11 +88,10 @@ myApp.readData = function()
             games.push(game);
         });
         myApp.populateTeamsData();
-<<<<<<< HEAD
         myApp.populateCombo();        
-=======
         myApp.createScoreBoard();
->>>>>>> f93db8e0ff73bfd6c3a91dc0baae383821134e88
+        myApp.printTable();
+        myApp.createTimeSeries();
     });
 }
 
@@ -360,8 +389,7 @@ myApp.indexOfDate = function(name, date)
 {
     for(var i = 0; i < teamGames[name].length; i++) {
         var from = teamGames[name][i].date.split("/");    
-        var teamDate = new Date("20" + from[2], from[1]-1, from[0]);  
-        console.log(date + " - " + teamDate);
+        var teamDate = new Date("20" + from[2], from[1]-1, from[0]); 
         if (teamDate > date)
             return i - 1;        
     }
@@ -396,6 +424,307 @@ myApp.getTotalScore = function(results)
     }
     return score;
 }
+
+//$ELIAS - TIMESERIES$
+
+myApp.appendTimeSeries = function(chartObject, svg)
+{
+    var line = d3.line()
+                 .x(function(d) { return chartObject.xScale(d.date); })
+                 .y(function(d) { return chartObject.yScale(d.close); });
+    
+    svg.append("path")
+      .data(chartObject.data)
+      .attr("class", "line")
+      .attr("d", line)
+      .style("fill", "none")
+      .style("stroke", "steelblue")
+      .style("stroke-width", "2px");    
+}
+
+myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
+{        
+    
+    var parseDate = d3.timeParse("%d-%b-%y");
+    
+    var x = d3.scaleTime().range([0, chartObject.cw]),
+        x2 = d3.scaleTime().range([0, chartObject.cw]),
+        y = d3.scaleLinear().range([chartObject.ch, 0]),
+        y2 = d3.scaleLinear().range([chartObject.ch2, 0]);
+    
+    chartObject.colorScale = d3.scaleOrdinal(d3.schemeCategory20);
+    
+    var xAxis = d3.axisBottom(x),
+        xAxis2 = d3.axisBottom(x2),
+        yAxis = d3.axisLeft(y);
+    
+    var brush = d3.brushX()
+    .extent([[0, 0], [chartObject.cw, chartObject.ch2]])
+    .on("brush end", brushed);
+    
+    var zoom = d3.zoom()
+    .scaleExtent([1, Infinity])
+    .translateExtent([[0, 0], [chartObject.cw, chartObject.ch]])
+    .extent([[0, 0], [chartObject.cw, chartObject.ch]])
+    .on("zoom", zoomed);
+        
+    svg.append("defs").append("clipPath")
+        .attr("id", "clip")
+        .append("rect")
+        .attr("width", chartObject.cw)
+        .attr("height", chartObject.ch);            
+    
+    var focus = svg.append("g")
+    .attr("class", "focus")
+    .attr("transform", "translate(" + chartObject.margins.left + "," + chartObject.margins.top + ")");
+    
+    var context = svg.append("g")
+    .attr("class", "context")
+    .attr("transform", "translate(" + chartObject.margins2.left + "," + chartObject.margins2.top + ")");       
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////////     
+    var totalDates  = [];        
+    var totalValues = []; 
+    
+    for(var teamName in teamNames){
+        var name = teamNames[teamName];
+        for(var i = 0; i < teamGames[name].length; i++) {            
+            var from = teamGames[name][i].date.split("/");    
+            var teamDate = new Date("20" + from[2], from[1]-1, from[0]); 
+            totalDates.push(teamDate); 
+            var index = myApp.indexOfDate(name,teamGames[name][i].date);            
+            totalValues.push(myApp.getTotalScore(teamGames[name][i].results));      
+        }      
+    }
+    
+    x.domain(d3.extent(totalDates, function(d) { return d; }));        
+    y.domain([0, Math.max.apply(null, totalValues)]);
+    x2.domain(x.domain());
+    y2.domain(y.domain());
+    
+    var dates  = [];        
+    var values = [];         
+    
+    var count = -1;
+    for(var teamName in teamNames){
+        count++;
+        var name = teamNames[teamName];
+        var data = [];
+        for(var i = 0; i < teamGames[name].length; i++) {
+            dates.push(teamGames[name][i].date);
+            var from = teamGames[name][i].date.split("/");    
+            var teamDate = new Date("20" + from[2], from[1]-1, from[0]);   
+            var index = myApp.indexOfDate(name,teamGames[name][i].date);
+            values.push(myApp.getTotalScore(teamGames[name][i].results));   
+            var d = {date: teamDate, value: myApp.getTotalScore(teamGames[name][i].results)};
+            data.push(d);
+        }        
+        
+        var line = d3.line()
+        .x(function(d) { return x(d.date); })
+        .y(function(d) { return y(d.value); });
+        
+        var line2 = d3.line()
+        .x(function(d) { return x2(d.date); })
+        .y(function(d) { return y2(d.value); });                        
+        
+        focus.append("path")
+             .datum(data)
+             .attr("class", "line"+count)
+             .attr("d", line)
+             .style("fill", "none")
+             .style("stroke", chartObject.colorScale(chartObject.legend[count]))
+             .style("stroke-width", "2px");                            
+        
+        context.append("path")
+               .datum(data)
+               .attr("class", "line"+count)
+               .attr("d", line2)
+               .style("fill", "none")
+               .style("stroke", chartObject.colorScale(chartObject.legend[count]))
+               .style("stroke-width", "2px");
+    }   
+    
+        
+    var rect1 = focus.append('rect')
+                        .attr('x', 0)
+                        .attr('y', 0)
+                        .attr('width' , chartObject.cw)
+                        .attr('height', (chartObject.ch+20))
+                        .attr("fill", 'white')
+                        .attr('transform', 'translate('+ (chartObject.cw) +','+ (- 1) +')');
+    
+    var rect2 = focus.append('rect')
+                        .attr('x', -chartObject.margins.left)
+                        .attr('y', 0)
+                        .attr('width' , chartObject.margins.left)
+                        .attr('height', (chartObject.ch+20))
+                        .attr("fill", 'white')
+                        .attr('transform', 'translate('+ 0 +','+ (chartObject.margins.top - 1) +')');
+   
+    focus.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0," + chartObject.ch + ")")
+            .call(xAxis);        
+    
+    focus.append("g")
+        .attr("class", "axis axis--y")
+        .call(yAxis);                
+    
+    context.append("g")
+        .attr("class", "axis axis--x")
+        .attr("transform", "translate(0," + chartObject.ch2 + ")")
+        .call(xAxis2);
+    
+    context.append("g")
+        .attr("class", "brush")
+        .call(brush)
+        .call(brush.move, x.range());
+    
+    svg.append("rect")
+        .attr("class", "zoom")
+        .attr("width", chartObject.cw)
+        .attr("height", chartObject.ch)
+        .attr("transform", "translate(" + chartObject.margins.left + "," + chartObject.margins.top + ")")
+        .call(zoom);    
+    
+    function brushed() {         
+        if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return;
+        var s = d3.event.selection || x2.range();
+        x.domain(s.map(x2.invert, x2));
+                
+        minDate = s.map(x2.invert, x2)[0];
+        maxDate = s.map(x2.invert, x2)[1];
+        
+        var i;        
+        for(i = 0; i < teamNames.length; i++){            
+            focus.select(".line"+i).attr("d", d3.line()
+                                                .x(function(d) { return x(d.date); })
+                                                .y(function(d) { return y(d.value); }));
+        }
+        focus.select(".axis--x").call(xAxis);
+        svg.select(".zoom").call(zoom.transform, d3.zoomIdentity
+                                 .scale(chartObject.cw / (s[1] - s[0]))
+                                 .translate(-s[0], 0));
+    }
+    
+    function zoomed() {
+        if (d3.event.sourceEvent && d3.event.sourceEvent.type === "brush") return; // ignore zoom-by-brush
+        var t = d3.event.transform;
+        x.domain(t.rescaleX(x2).domain());
+        
+        minDate = t.rescaleX(x2).domain()[0];
+        maxDate = t.rescaleX(x2).domain()[1];
+        
+        var i;        
+        for(i = 0; i < teamNames.length; i++){            
+            focus.select(".line"+i).attr("d", d3.line()
+                                                .x(function(d) { return x(d.date); })
+                                                .y(function(d) { return y(d.value); }));
+        }
+        focus.select(".axis--x").call(xAxis);
+        context.select(".brush").call(brush.move, x.range().map(t.invertX, t));
+    }        
+}
+
+myApp.appendSvgLineChart = function(div, chartObject)
+{
+    var chart = chartObject;
+    var node = d3.select(div).append('svg')
+        .attr('class', 'svg')
+        .attr('width', chartObject.cw + chartObject.margins.left + chartObject.margins.right)
+        .attr('height', chartObject.ch + chartObject.margins.top + chartObject.margins.bottom);
+    
+    return node;
+}
+
+myApp.appendChartGroupLineChart = function(svg, chartObject)
+{    
+    var chart = svg.append('g')
+        .attr('class', 'chart-area')
+        .attr('width', chartObject.cw)
+        .attr('height', chartObject.ch)
+        .attr('transform', 'translate('+ chartObject.margins.left +','+ chartObject.margins.top +')' );
+    
+    return chart;
+}
+
+myApp.appendLegend = function(chartObject, div)
+{            
+    
+    var legend = div.append("g")
+                  .attr("class", "legend")
+                  .attr("font-family", "sans-serif")
+                  .attr("font-size", 10)
+                  .attr("text-anchor", "end")                  
+                  .selectAll("g")
+                  .data(chartObject.legend)
+                  .enter().append("g")
+                  .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+    
+    legend.append("rect")
+      .attr("x", chartObject.cw + 300)
+      .attr("width", 19)
+      .attr("height", 19)
+      .attr("fill", chartObject.colorScale);
+
+    legend.append("text")
+      .attr("x", chartObject.cw + 295)
+      .attr("y", 9.5)
+      .attr("dy", "0.32em")
+      .text(function(d) { return d; });
+    
+    return legend;
+}
+
+myApp.generateLabels = function(chartObject, div){
+    div.append("text")  
+       .attr("transform",
+             "translate(" + chartObject.margins.left + " ," + 
+                           (chartObject.margins.top - 5) + ")")
+       .style("text-anchor", "middle")
+       .text(chartObject.yLabel);
+    
+    div.append("text")  
+       .attr("transform",
+             "translate(" + (chartObject.cw + chartObject.margins.left + 30) + "," + 
+                           (chartObject.ch+chartObject.margins.top + 10) + ")")
+       .style("text-anchor", "middle")
+       .text(chartObject.xLabel);
+}
+
+
+myApp.createTimeSeries = function() 
+{    
+    //  GRAFICO DE LINHA    
+    var div = d3.select("#chartDiv");
+    var svg = myApp.appendSvgLineChart("#chartDiv", lineChart);
+    var cht = myApp.appendChartGroupLineChart(svg, lineChart); 
+    
+    teamNames.sort();        
+    for(var i = 0; i < teamNames.length; i++) {        
+        lineChart.legend.push(teamNames[i]);
+    }  
+    
+    myApp.createTimeSeriesData("campeonatoIngles.csv", lineChart, svg, cht);        
+    myApp.appendLegend(lineChart,svg);      
+    myApp.generateLabels(lineChart, svg);                    
+}
+
+myApp.generateData = function(n) {
+
+    
+    var dataArray = [];
+    var i;
+    for (i = 1; i < n; i++) {
+        var value = (Math.random()*650);
+        dataArray.push(value);
+    }
+    return dataArray;
+    
+}
+
+//$ELIAS - TIMESERIES$
 
 myApp.run = function() 
 {        
