@@ -53,6 +53,24 @@ lineChart.legend        = [];
 lineChart.count         = undefined;
 lineChart.countTotal    = undefined;
 
+//GRAFICO DE BARRAS//
+var bars = {};
+bars.margins = {left: 25, right: 15, bottom: 30, top:10};
+bars.cw      = 400;
+bars.ch      = 300;
+bars.maxX    = 100;
+bars.maxY    = 200;
+bars.xScale  = undefined;
+bars.yScale  = undefined;
+bars.xAxis   = undefined;
+bars.yAxis   = undefined;
+bars.zoom    = undefined;
+bars.brush   = undefined;
+bars.xAxisGroup = undefined;
+bars.yAxisGroup = undefined;
+bars.rectList = undefined;
+bars.data = [];
+
 
 myApp.appendSvg = function(div, extraWidth, extraHeight)
 {
@@ -92,6 +110,7 @@ myApp.readData = function()
         myApp.createScoreBoard();
         myApp.printTable();
         myApp.createTimeSeries();
+        myApp.createBarsGraph();
     });
 }
 
@@ -725,6 +744,158 @@ myApp.generateData = function(n) {
 }
 
 //$ELIAS - TIMESERIES$
+
+//$MARCELO - GRAFICO DE BARRAS$
+
+myApp.appendSvgBarsGraph = function(div)
+{
+    var node = d3.select(div).append('svg')
+        .attr('width',  bars.cw  + bars.margins.left + bars.margins.right)
+        .attr('height', bars.ch  + bars.margins.top  + bars.margins.bottom);
+
+    return node;
+}
+
+myApp.appendChartGroupBarsGraph = function(svg)
+{
+    var chart = svg.append('g')
+        .attr('class', 'chart-area')
+        .attr('width', bars.cw)
+        .attr('height', bars.ch)
+        .attr('transform', 'translate('+ bars.margins.left +','+ bars.margins.top +')' );
+
+    return chart;
+}
+
+myApp.createAxesBarsGraph = function(svg)
+{        
+    bars.xScale = d3.scaleLinear().domain([0,bars.maxX]).range([0,bars.cw]);
+    bars.yScale = d3.scaleLinear().domain([bars.maxY,0]).range([0,bars.ch]);        
+
+    bars.xAxisGroup = svg.append('g')
+        .attr('class', 'xAxis')
+        .attr('transform', 'translate('+ bars.margins.left +','+ (bars.ch+bars.margins.top) +')');
+
+    bars.yAxisGroup = svg.append('g')
+        .attr('class', 'yAxis')
+        .attr('transform', 'translate('+ bars.margins.left +','+ bars.margins.top +')');
+
+    bars.xAxis = d3.axisBottom(bars.xScale);
+    bars.yAxis = d3.axisLeft(bars.yScale);
+
+    bars.xAxisGroup.call(bars.xAxis);
+    bars.yAxisGroup.call(bars.yAxis);
+
+    d3.select('.xAxis')
+        .style('display', 'none');
+}
+
+myApp.updateXAxis = function(div)
+{
+    var p = [];
+    var textWin = {"text": "Wins", "x": bars.rectList[0].x};
+    var textLost = {"text": "Losts", "x": bars.rectList[1].x};
+    var textDraw = {"text": "Draws", "x": bars.rectList[2].x};
+
+    p.push(textWin);
+    p.push(textLost);
+    p.push(textDraw);
+
+    var v = div
+        .append('text')
+        .text(function(d){ return textWin.text})
+        .attr('class', 'label')
+        .attr('x', function(d){ return textWin.x + bars.margins.left; })
+        .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
+    
+    var t = div
+        .append('text')
+        .text(function(d){ return textLost.text})
+        .attr('class', 'label')
+        .attr('x', function(d){ return textLost.x + bars.margins.left; })
+        .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
+    
+    var u = div
+        .append('text')
+        .text(function(d){ return textDraw.text})
+        .attr('class', 'label')
+        .attr('x', function(d){ return textDraw.x + bars.margins.left; })
+        .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
+    
+    var rect = div
+        .append("rect")
+        .attr("x", function(){return 0 + bars.margins.left;})
+        .attr("y", function(){return bars.ch + bars.margins.top;})
+        .attr("width", bars.cw)
+        .attr("height", function(){return 1;});
+}
+
+myApp.createRectsDataBarsGraph = function()
+{
+    var rects = [];
+    var generalWins = 0;
+    var generalLosts = 0;
+    var generalDraws = 0;
+    var totalGames = 0;
+    for(var i = 0; i < teamNames.length; i++) {
+        for(var j = 0; j < teamNames.length; j++) {
+            var homeTeam = teamNames[i];
+            var awayTeam = teamNames[j];
+            var gameIndex = myApp.indexOfGame(homeTeam, awayTeam);
+            if(gameIndex != -1) {
+                var game = games[gameIndex];
+                if(game.result == 'H')
+                    generalWins++;
+                else if(game.result == 'A')
+                    generalLosts++;
+                else
+                    generalDraws++;
+                totalGames++;
+            }   
+        }
+    }
+    bars.maxY = totalGames;
+    var rectWin = {'x': 10, 'y': 0, 'width': 25, 'height': generalWins, 'color': 'green'};
+    rects.push(rectWin);
+    var rectLost = {'x': 70, 'y': 0, 'width': 25, 'height': generalLosts, 'color': 'red'};
+    rects.push(rectLost);
+    var rectDraw = {'x': 130, 'y': 0, 'width': 25, 'height': generalDraws, 'color': 'gray'};
+    rects.push(rectDraw);
+    bars.rectList = rects;
+    return rects;
+}
+
+myApp.appendRects = function(div)
+{
+    var tran = d3.transition()
+                .duration(750);
+
+    var rect = div.selectAll('rect')
+            .data(bars.rectList)
+            .enter()
+            .append('rect')
+            .transition(tran)
+            .attr('x', function(d){ return d.x; })
+            .attr('y', function(d){ return bars.yScale(d.y) - (bars.ch - bars.yScale(d.height)); })
+            .attr('width', function(d){ return d.width; })
+            .attr('height', function(d){ return bars.ch - bars.yScale(d.height); })
+            .attr('fill',function(d){ return d.color; })
+            .attr('id','barra');                
+
+    return rect;
+}
+
+myApp.createBarsGraph = function()
+{
+    myApp.createRectsDataBarsGraph();
+    var svg = myApp.appendSvgBarsGraph("#barsDiv");
+    var chrt = myApp.appendChartGroupBarsGraph(svg);
+    myApp.createAxesBarsGraph(svg);
+    myApp.updateXAxis(svg);
+    myApp.appendRects(chrt);
+}
+
+//$MARCELO - GRAFICO DE BARRAS$
 
 myApp.run = function() 
 {        
