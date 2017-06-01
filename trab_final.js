@@ -97,7 +97,7 @@ myApp.appendChartGroup = function(svg)
 
 myApp.readData = function()
 {
-    d3.csv("campeonatoIngles.csv", function(error, data) {
+    d3.csv("PL2016.csv", function(error, data) {
         if (error) throw error;
 
         var teste = {};
@@ -729,7 +729,7 @@ myApp.createTimeSeries = function()
         lineChart.legend.push(teamNames[i]);
     }  
     
-    myApp.createTimeSeriesData("campeonatoIngles.csv", lineChart, svg, cht);        
+    myApp.createTimeSeriesData("PL2016.csv", lineChart, svg, cht);        
     myApp.appendLegend(lineChart,svg);      
     myApp.generateLabels(lineChart, svg);                    
 }
