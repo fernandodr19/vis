@@ -14,7 +14,6 @@ line {
     border : 1px solid black; 
 }
 
-<<<<<<< HEAD
 table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
@@ -29,8 +28,8 @@ td, th {
 
 tr:nth-child(even) {
     background-color: #dddddd;
-=======
-div.tooltip {
+}
+div.tooltipx {
   position: absolute;
   text-align: center;
   width: 60px;
@@ -41,5 +40,4 @@ div.tooltip {
   border: 0px;
   border-radius: 8px;
   pointer-events: none;
->>>>>>> f93db8e0ff73bfd6c3a91dc0baae383821134e88
 }

@@ -23,9 +23,10 @@ sc.svg = undefined;
 sc.cht = undefined;
 sc.baseX = 100;
 sc.baseY = 100;
-sc.variationX = 20;
-sc.variationY = 20;
-sc.radius = 5;
+sc.ratio = 7;
+sc.variationX = 4*sc.ratio;
+sc.variationY = 4*sc.ratio;
+sc.radius = sc.ratio;
 
 //TIMESERIES//
 var lineChart = {};
@@ -116,7 +117,7 @@ myApp.readData = function()
 
 myApp.createScoreBoard = function()
 {
-    var svg = myApp.appendSvg("#mainDiv", 100, 100);
+    var svg = myApp.appendSvg("#mainDiv", 100, 500);
     var cht = myApp.appendChartGroup(svg); 
     
     sc.svg = svg;
@@ -195,7 +196,7 @@ myApp.appendCircles = function()
          .style("opacity", .9);
        div.html(d.date + "<br/>"+ d.homeGoals + " x " + d.awayGoals)
          .style("left", d.cx + 50 + "px")
-         .style("top", d.cy + 50 + "px");
+         .style("top", d.cy + 50 + 770 + "px");
     }
     
     function handleMouseOut(d, i) {
@@ -426,7 +427,7 @@ myApp.populateCombo = function()
         var el = document.createElement("option");
         el.textContent = opt;
         el.value = opt;
-        select.appendChild(el);
+//        select.appendChild(el);//checkHere
     }
 
 }
