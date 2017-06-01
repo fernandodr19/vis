@@ -69,8 +69,10 @@ bars.zoom    = undefined;
 bars.brush   = undefined;
 bars.xAxisGroup = undefined;
 bars.yAxisGroup = undefined;
-bars.rectList = undefined;
+bars.rectList   = undefined;
 bars.data = [];
+bars.svg  = undefined;
+bars.chrt = undefined;
 
 
 myApp.appendSvg = function(div, extraWidth, extraHeight)
@@ -353,7 +355,8 @@ myApp.populateTeamsData = function()
 
 myApp.select = function()
 {
-    myApp.printTable();    
+    myApp.printTable();
+    myApp.updateBars();
 }
 
 myApp.sortByTotalPoints = function(date)
@@ -368,7 +371,7 @@ myApp.sortByTotalPoints = function(date)
 myApp.printTable = function()
 {
     
-    var myTable= "<table><tr><th>Team</th>";
+    var myTable= '<table class="table"><tr><th>Team</th>';
     myTable+= "<th>Points</th>";
     myTable+="<th>Goals Pro</th></tr>";
     var selectedTeam = document.getElementById("selectTeam").value;    
@@ -797,31 +800,59 @@ myApp.updateXAxis = function(div)
     var textWin = {"text": "Wins", "x": bars.rectList[0].x};
     var textLost = {"text": "Losts", "x": bars.rectList[1].x};
     var textDraw = {"text": "Draws", "x": bars.rectList[2].x};
+    var textTeamWin = {"text": "Team Wins", "x": bars.rectList[3].x};
+    var textTeamLost = {"text": "Team Losts", "x": bars.rectList[4].x};
+    var textTeamDraw = {"text": "Team Draws", "x": bars.rectList[5].x};
 
     p.push(textWin);
     p.push(textLost);
     p.push(textDraw);
+    p.push(textTeamWin);
+    p.push(textTeamLost);
+    p.push(textTeamDraw);
 
-    var v = div
+    var genW = div
         .append('text')
         .text(function(d){ return textWin.text})
         .attr('class', 'label')
         .attr('x', function(d){ return textWin.x + bars.margins.left; })
         .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
     
-    var t = div
+    var genL = div
         .append('text')
         .text(function(d){ return textLost.text})
         .attr('class', 'label')
         .attr('x', function(d){ return textLost.x + bars.margins.left; })
         .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
     
-    var u = div
+    var genD = div
         .append('text')
         .text(function(d){ return textDraw.text})
         .attr('class', 'label')
         .attr('x', function(d){ return textDraw.x + bars.margins.left; })
         .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
+    
+    var teamW = div
+        .append('text')
+        .text(function(d){ return textTeamWin.text})
+        .attr('class', 'label')
+        .attr('x', function(d){ return textTeamWin.x + bars.margins.left; })
+        .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
+    
+    var teamL = div
+        .append('text')
+        .text(function(d){ return textTeamLost.text})
+        .attr('class', 'label')
+        .attr('x', function(d){ return textTeamLost.x + bars.margins.left; })
+        .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
+    
+    var teamD = div
+        .append('text')
+        .text(function(d){ return textTeamDraw.text})
+        .attr('class', 'label')
+        .attr('x', function(d){ return textTeamDraw.x + bars.margins.left; })
+        .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
+    
     
     var rect = div
         .append("rect")
@@ -833,11 +864,17 @@ myApp.updateXAxis = function(div)
 
 myApp.createRectsDataBarsGraph = function()
 {
-    var rects = [];
-    var generalWins = 0;
+    var rects        = [];
+    var generalWins  = 0;
     var generalLosts = 0;
     var generalDraws = 0;
-    var totalGames = 0;
+    var teamWins     = 0;
+    var teamLosts    = 0;
+    var teamDraws    = 0;    
+    var totalGames   = 0;
+    var bestTeamWins = 0;
+    var selectedTeam = document.getElementById("selectTeam").value;
+    
     for(var i = 0; i < teamNames.length; i++) {
         for(var j = 0; j < teamNames.length; j++) {
             var homeTeam = teamNames[i];
@@ -845,23 +882,52 @@ myApp.createRectsDataBarsGraph = function()
             var gameIndex = myApp.indexOfGame(homeTeam, awayTeam);
             if(gameIndex != -1) {
                 var game = games[gameIndex];
-                if(game.result == 'H')
+                if(game.result == 'H'){
                     generalWins++;
-                else if(game.result == 'A')
-                    generalLosts++;
-                else
-                    generalDraws++;
+                    if(homeTeam == selectedTeam)
+                        teamWins++;                    
+                }
+                else{ 
+                    if(game.result == 'A'){
+                        generalLosts++;
+                        if(homeTeam == selectedTeam)
+                            teamLosts++;                        
+                    }
+                    else{
+                        generalDraws++;
+                        if(homeTeam == selectedTeam)
+                            teamDraws++;                        
+                    }
+                }
                 totalGames++;
             }   
         }
+        if(bestTeamWins < teamWins)
+            bestTeamWins = teamWins;        
     }
-    bars.maxY = totalGames;
+    
+    if(generalWins >= generalLosts && generalWins >= generalDraws)
+        bars.maxY = generalWins;
+    else if(generalLosts >= generalDraws)
+        bars.maxY = generalLosts;
+    else
+        bars.maxY = generalDraws;
+            
+    console.log("General Wins: " + generalWins);
+    
     var rectWin = {'x': 10, 'y': 0, 'width': 25, 'height': generalWins, 'color': 'green'};
     rects.push(rectWin);
     var rectLost = {'x': 70, 'y': 0, 'width': 25, 'height': generalLosts, 'color': 'red'};
     rects.push(rectLost);
     var rectDraw = {'x': 130, 'y': 0, 'width': 25, 'height': generalDraws, 'color': 'gray'};
     rects.push(rectDraw);
+    var rectTeamWin = {'x': 190, 'y': 0, 'width': 25, 'height': teamWins, 'color': 'green'};
+    rects.push(rectTeamWin);
+    var rectTeamLost = {'x': 250, 'y': 0, 'width': 25, 'height': teamLosts, 'color': 'red'};
+    rects.push(rectTeamLost);
+    var rectTeamDraw = {'x': 310, 'y': 0, 'width': 25, 'height': teamDraws, 'color': 'gray'};
+    rects.push(rectTeamDraw);
+    
     bars.rectList = rects;
     return rects;
 }
@@ -881,19 +947,25 @@ myApp.appendRects = function(div)
             .attr('width', function(d){ return d.width; })
             .attr('height', function(d){ return bars.ch - bars.yScale(d.height); })
             .attr('fill',function(d){ return d.color; })
-            .attr('id','barra');                
+            .attr('class','barra');                
 
     return rect;
+}
+
+myApp.updateBars = function(){
+    bars.svg.selectAll("rect.barra").remove();
+    myApp.createRectsDataBarsGraph();
+    myApp.appendRects(bars.chrt);    
 }
 
 myApp.createBarsGraph = function()
 {
     myApp.createRectsDataBarsGraph();
-    var svg = myApp.appendSvgBarsGraph("#barsDiv");
-    var chrt = myApp.appendChartGroupBarsGraph(svg);
-    myApp.createAxesBarsGraph(svg);
-    myApp.updateXAxis(svg);
-    myApp.appendRects(chrt);
+    bars.svg = myApp.appendSvgBarsGraph("#barsDiv");
+    bars.chrt = myApp.appendChartGroupBarsGraph(bars.svg);
+    myApp.createAxesBarsGraph(bars.svg);
+    myApp.updateXAxis(bars.svg);
+    myApp.appendRects(bars.chrt);
 }
 
 //$MARCELO - GRAFICO DE BARRAS$

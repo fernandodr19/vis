@@ -6,19 +6,36 @@
 <link rel="stylesheet" href="trab_final.css">
 
 <script src="https://d3js.org/d3.v4.min.js"></script><br>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    
 <script src="trab_final.js"></script>  
 </head>
 
 <body>
-    <select id="selectTeam">
-    </select>
-    <input type="date" id="selectDate">
-    <button type="button" onclick="myApp.select()">Select</button>
-    <div id="blanckDiv"><br><br></div>
-    <div id="tableDiv"> </div>
-    <div id="mainDiv"></div>
-    <div id="chartDiv"></div>
-    <div id="barsDiv"></div>
+    <div class="container">
+        <div class="col-md-12" style="margin-bottom: 50px;">
+            <select id="selectTeam" class="form-control" style="display: inline; width: 200px;">
+            </select>
+            <input class="form-control" type="date" id="selectDate" style="display: inline; width: 200px;">
+            <button type="button" onclick="myApp.select()" class="btn btn-primary">Select</button>
+        </div>
+        <!--<div id="blanckDiv" class="col-md-6"><br><br></div>-->
+        
+        <div align="center" id="tableDiv" class="col-md-12"></div>
+        <div id="barsDiv" class="col-md-6" style="margin-top: 170px;"></div>
+        
+        <div id="mainDiv" class="col-md-6"></div> 
+        
+        <div align="center" id="chartDiv" class="col-md-12"></div>
+    </div>
+    
 </body>
 
 </html>
