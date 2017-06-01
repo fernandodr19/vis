@@ -427,7 +427,7 @@ myApp.populateCombo = function()
         var el = document.createElement("option");
         el.textContent = opt;
         el.value = opt;
-//        select.appendChild(el);//checkHere
+        select.appendChild(el);
     }
 
 }
