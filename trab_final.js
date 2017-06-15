@@ -21,12 +21,14 @@ var maxDate = undefined;
 var sc = {};
 sc.svg = undefined;
 sc.cht = undefined;
-sc.baseX = 100;
+sc.baseX = 70;
 sc.baseY = 100;
-sc.ratio = 7;
+sc.ratio = 5;
 sc.variationX = 4*sc.ratio;
 sc.variationY = 4*sc.ratio;
 sc.radius = sc.ratio;
+sc.scoreBoardSizeX = sc.baseX + 20*sc.variationX + 50;
+sc.scoreBoardSizeY = sc.baseY + 20*sc.variationY + 50;
 
 //TIMESERIES//
 var lineChart = {};
@@ -105,7 +107,8 @@ myApp.readData = function()
             var game = {'date': d.Date, 'homeTeam': d.HomeTeam, 'awayTeam' : d.AwayTeam, 'homeGoals': d.FTHG, 'awayGoals': d.FTAG, 
                         'result': d.FTR, 'referee': d.Referee, 'homeShots': d.HS, 'awayShots': d.AS, 'homeShotsOnTarget': d.HST,
                         'awayShotsOnTarget': d.AST, 'homeFouls': d.HF, 'awayFouls': d.AF, 'homeCorner': d.HC, 'awayCorner': d.AC,
-                        'homeYellow': d.HY, 'awayYellow': d.AY, 'homeRed': d.HR, 'awayRed': d.AR};
+                        'homeYellow': d.HY, 'awayYellow': d.AY, 'homeRed': d.HR, 'awayRed': d.AR, 'homeBet': d.B365H,
+                        'draftBet': d.B365D, 'awayBet': d.B365A};
             games.push(game);
         });
         myApp.populateTeamsData();
@@ -119,31 +122,42 @@ myApp.readData = function()
 
 myApp.createScoreBoard = function()
 {
-    var svg = myApp.appendSvg("#mainDiv", 100, 500);
+    var svg = myApp.appendSvg("#mainDiv", 200, 750);
     var cht = myApp.appendChartGroup(svg); 
     
     sc.svg = svg;
     sc.cht = cht;   
     
-    myApp.appendLabels();
-    myApp.appendGrid();
-    myApp.appendCircles();
+    //by victories
+    myApp.appendLabels(0, 0);
+    myApp.appendGrid(0, 0);
+    myApp.appendCircles(0, 0, 'victories');
+    
+    //by bets
+    myApp.appendLabels(sc.scoreBoardSizeX, 0);
+    myApp.appendGrid(sc.scoreBoardSizeX, 0);
+    myApp.appendCircles(sc.scoreBoardSizeX, 0, 'bets');
+    
+    //diff
+    myApp.appendLabels(sc.scoreBoardSizeX/2, sc.scoreBoardSizeY);
+    myApp.appendGrid(sc.scoreBoardSizeX/2, sc.scoreBoardSizeY);
+    myApp.appendCircles(sc.scoreBoardSizeX/2, sc.scoreBoardSizeY, 'diff');
 }
 
-myApp.appendLabels = function()
+myApp.appendLabels = function(offSetX, offSetY)
 {
     for(var i = 0; i < teamNames.length; i++) {
         sc.cht.append("text") 
-            .attr("x", sc.baseX - 100)
-            .attr("y", sc.baseY + sc.variationY*i + sc.radius/2)
+            .attr("x", sc.baseX - 100 + offSetX)
+            .attr("y", sc.baseY + sc.variationY*i + sc.radius/2 + offSetY)
             .style("fill", "black")
             .style("font-weight", "bold")
             .text(teamNames[i]);   
         
         sc.cht.append("text")
             .attr("transform", "translate(0,180)rotate(-90)")
-            .attr("y", sc.baseX + sc.variationX * i - sc.radius*1.5)
-            .attr("x", sc.baseY)
+            .attr("y", sc.baseX + sc.variationX * i - sc.radius*1.5 + offSetX)
+            .attr("x", sc.baseY - offSetY)
             .attr("dy", "1em")
             .style("fill", "black")
             .style("font-weight", "bold")
@@ -151,36 +165,38 @@ myApp.appendLabels = function()
     }
 }
 
-myApp.appendGrid = function()
+myApp.appendGrid = function(offSetX, offSetY)
 {
    for(var i = 0; i <= teamNames.length; i++) {
        sc.cht.append("line")
-            .attr("x1", sc.baseX - sc.variationX/2 + sc.variationX*i)
-            .attr("y1", sc.baseY - 50)
-            .attr("x2", sc.baseX - sc.variationX/2 + sc.variationX*i)
-            .attr("y2", sc.baseY + teamNames.length * sc.variationY)
+            .attr("class", "vertical")
+            .attr("x1", sc.baseX - sc.variationX/2 + sc.variationX*i + offSetX)
+            .attr("y1", sc.baseY - 50 + offSetY)
+            .attr("x2", sc.baseX - sc.variationX/2 + sc.variationX*i + offSetX)
+            .attr("y2", sc.baseY + teamNames.length * sc.variationY + offSetY)
             .attr("stroke-width", 0.1)
             .attr("stroke", "black");
        
       sc.cht.append("line")
-            .attr("x1", sc.baseX - 100)
-            .attr("y1", sc.baseY - sc.variationY/2 + sc.variationY*i)
-            .attr("x2", sc.baseX +teamNames.length * sc.variationX)
-            .attr("y2", sc.baseY - sc.variationY/2 + sc.variationY*i)
+            .attr("class", "vertical")
+            .attr("x1", sc.baseX - 100 + offSetX)
+            .attr("y1", sc.baseY - sc.variationY/2 + sc.variationY*i + offSetY)
+            .attr("x2", sc.baseX +teamNames.length * sc.variationX + offSetX)
+            .attr("y2", sc.baseY - sc.variationY/2 + sc.variationY*i + offSetY)
             .attr("stroke-width", 0.1)
             .attr("stroke", "black");
    } 
 }
 
-myApp.appendCircles = function()
+myApp.appendCircles = function(offSetX, offSetY, type)
 {
     var div = d3.select("body").append("div")
         .attr("class", "tooltip")
         .style("opacity", 0);
     
-    var circles = myApp.createCirclesData();
+    var circles = myApp.createCirclesData(offSetX, offSetY, type);
     
-    sc.cht.selectAll('circle')
+    sc.cht.selectAll('circle'+offSetX)
         .data(circles)
         .enter()
         .append('circle')
@@ -197,8 +213,8 @@ myApp.appendCircles = function()
          .duration(200)
          .style("opacity", .9);
        div.html(d.date + "<br/>"+ d.homeGoals + " x " + d.awayGoals)
-         .style("left", d.cx + 50 + "px")
-         .style("top", d.cy + 50 + 770 + "px");
+         .style("left", d.cx + 50 + 50 + offsetX + "px")
+         .style("top", d.cy + 50 + 850 + "px");
     }
     
     function handleMouseOut(d, i) {
@@ -208,7 +224,7 @@ myApp.appendCircles = function()
     }
 }
 
-myApp.createCirclesData = function()
+myApp.createCirclesData = function(offSetX, offSetY, type)
 {
     var circles = [];
     for(var i = 0; i < teamNames.length; i++) {
@@ -218,13 +234,39 @@ myApp.createCirclesData = function()
             var gameIndex = myApp.indexOfGame(homeTeam, awayTeam);
             if(gameIndex != -1) {
                 var game = games[gameIndex];
-                var x = sc.baseX + sc.variationX * j;
-                var y = sc.baseY + sc.variationY * i;
+                var x = sc.baseX + sc.variationX * j + offSetX;
+                var y = sc.baseY + sc.variationY * i + offSetY;
                 var color = 'grey';
-                if(game.result == 'H')
+                
+                if(type == 'victories') {
+                    if(game.result == 'H')
+                        color = 'green';
+                    else if(game.result == 'A')
+                        color = 'red';
+                }
+                
+                if(type == 'bets') {
+                    var max = Math.max(game.homeBet, game.draftBet, game.awayBet);
+                    if(max == game.homeBet)
+                        color = 'green';
+                    if(max == game.awayBet)
+                        color = 'red';
+                    if(max == game.draftBet)
+                        color = 'grey';
+                }
+                
+                if(type == 'diff') {
                     color = 'green';
-                else if(game.result == 'A')
-                    color = 'red';
+                    
+                    var max = Math.max(game.homeBet, game.draftBet, game.awayBet);
+                    if(max == game.homeBet && game.result == 'A')
+                        color = 'red';
+                    if(max == game.awayBet && game.result == 'H')
+                        color = 'red';
+                    if(max == game.draftBet)
+                        color = 'white'; //rever este caso
+                }
+                
                 var c = {'id': 'id','cx': x, 'cy': y, 'r': sc.radius, 'color': color, 'homeGoals': game.homeGoals,
                          'awayGoals': game.awayGoals, 'date': game.date};
                 circles.push(c);

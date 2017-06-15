@@ -29,7 +29,7 @@ td, th {
 tr:nth-child(even) {
     background-color: #dddddd;
 }
-div.tooltipx {
+div.tooltip {
   position: absolute;
   text-align: center;
   width: 60px;
