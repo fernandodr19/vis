@@ -108,8 +108,8 @@ myApp.readData = function()
             var game = {'date': d.Date, 'homeTeam': d.HomeTeam, 'awayTeam' : d.AwayTeam, 'homeGoals': d.FTHG, 'awayGoals': d.FTAG, 
                         'result': d.FTR, 'referee': d.Referee, 'homeShots': d.HS, 'awayShots': d.AS, 'homeShotsOnTarget': d.HST,
                         'awayShotsOnTarget': d.AST, 'homeFouls': d.HF, 'awayFouls': d.AF, 'homeCorner': d.HC, 'awayCorner': d.AC,
-                        'homeYellow': d.HY, 'awayYellow': d.AY, 'homeRed': d.HR, 'awayRed': d.AR, 'homeBet': d.B365H,
-                        'draftBet': d.B365D, 'awayBet': d.B365A};
+                        'homeYellow': d.HY, 'awayYellow': d.AY, 'homeRed': d.HR, 'awayRed': d.AR, 'homeBet': d.B365A,
+                        'draftBet': d.B365D, 'awayBet': d.B365H};
             games.push(game);
         });
         myApp.populateTeamsData();
