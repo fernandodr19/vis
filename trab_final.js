@@ -108,8 +108,8 @@ myApp.readData = function()
             var game = {'date': d.Date, 'homeTeam': d.HomeTeam, 'awayTeam' : d.AwayTeam, 'homeGoals': d.FTHG, 'awayGoals': d.FTAG, 
                         'result': d.FTR, 'referee': d.Referee, 'homeShots': d.HS, 'awayShots': d.AS, 'homeShotsOnTarget': d.HST,
                         'awayShotsOnTarget': d.AST, 'homeFouls': d.HF, 'awayFouls': d.AF, 'homeCorner': d.HC, 'awayCorner': d.AC,
-                        'homeYellow': d.HY, 'awayYellow': d.AY, 'homeRed': d.HR, 'awayRed': d.AR, 'homeBet': d.B365A,
-                        'draftBet': d.B365D, 'awayBet': d.B365H};
+                        'homeYellow': d.HY, 'awayYellow': d.AY, 'homeRed': d.HR, 'awayRed': d.AR, 'homeBet': d.B365H,
+                        'draftBet': d.B365D, 'awayBet': d.B365A};
             games.push(game);
         });
         myApp.populateTeamsData();
@@ -254,19 +254,19 @@ myApp.createCirclesData = function(offSetX, offSetY, type)
                 }
                 
                 if(type == 'bets') {
-                    var max = Math.max(game.homeBet, game.draftBet, game.awayBet);
-                    if(max == game.homeBet)
+                    var bet = Math.min(game.homeBet, game.draftBet, game.awayBet);
+                    if(bet == game.homeBet)
                         color = 'green';
-                    if(max == game.awayBet)
+                    if(bet == game.awayBet)
                         color = 'red';
-                    if(max == game.draftBet)
+                    if(bet == game.draftBet)
                         color = 'grey';
                 }
                 
                 if(type == 'diff') {
                     color = 'green';
                     
-                    var bet = Math.max(game.homeBet, game.draftBet, game.awayBet);
+                    var bet = Math.min(game.homeBet, game.draftBet, game.awayBet);
                     if(bet == game.homeBet && (game.result != 'H') ||
                        bet == game.awayBet && (game.result != 'A') ||
                        bet == game.draftBet && (game.result != 'D'))
