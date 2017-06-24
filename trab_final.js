@@ -22,7 +22,8 @@ var sc = {};
 sc.svg = undefined;
 sc.cht = undefined;
 sc.baseX = 70;
-sc.baseY = 100;
+sc.baseY = 150;
+sc.varY = -(sc.baseY - 50);
 sc.ratio = 5;
 sc.variationX = 4*sc.ratio;
 sc.variationY = 4*sc.ratio;
@@ -129,22 +130,22 @@ myApp.createScoreBoard = function()
     sc.cht = cht;   
     
     //by victories
-    myApp.appendLabels(0, 0);
+    myApp.appendLabels(0, 0, 'Victories');
     myApp.appendGrid(0, 0);
     myApp.appendCircles(0, 0, 'victories');
     
     //by bets
-    myApp.appendLabels(sc.scoreBoardSizeX, 0);
+    myApp.appendLabels(sc.scoreBoardSizeX, 0, 'Bets');
     myApp.appendGrid(sc.scoreBoardSizeX, 0);
     myApp.appendCircles(sc.scoreBoardSizeX, 0, 'bets');
     
     //diff
-    myApp.appendLabels(sc.scoreBoardSizeX/2, sc.scoreBoardSizeY);
+    myApp.appendLabels(sc.scoreBoardSizeX/2, sc.scoreBoardSizeY, 'Diff');
     myApp.appendGrid(sc.scoreBoardSizeX/2, sc.scoreBoardSizeY);
     myApp.appendCircles(sc.scoreBoardSizeX/2, sc.scoreBoardSizeY, 'diff');
 }
 
-myApp.appendLabels = function(offSetX, offSetY)
+myApp.appendLabels = function(offSetX, offSetY, label)
 {
     for(var i = 0; i < teamNames.length; i++) {
         sc.cht.append("text") 
@@ -157,12 +158,19 @@ myApp.appendLabels = function(offSetX, offSetY)
         sc.cht.append("text")
             .attr("transform", "translate(0,180)rotate(-90)")
             .attr("y", sc.baseX + sc.variationX * i - sc.radius*1.5 + offSetX)
-            .attr("x", sc.baseY - offSetY)
+            .attr("x", sc.baseY + sc.varY - offSetY)
             .attr("dy", "1em")
             .style("fill", "black")
             .style("font-weight", "bold")
             .text(teamNames[i]);
     }
+        sc.cht.append("text") 
+            .attr("x", sc.baseX + 150 + offSetX)
+            .attr("y", sc.baseY - sc.variationY*6 + sc.radius/2 + offSetY)
+            .style("fill", "black")
+            .style("font-weight", "bold")
+            .style("font-size", "25")
+            .text(label); 
 }
 
 myApp.appendGrid = function(offSetX, offSetY)
@@ -258,13 +266,13 @@ myApp.createCirclesData = function(offSetX, offSetY, type)
                 if(type == 'diff') {
                     color = 'green';
                     
-                    var max = Math.max(game.homeBet, game.draftBet, game.awayBet);
-                    if(max == game.homeBet && game.result == 'A')
+                    var bet = Math.max(game.homeBet, game.draftBet, game.awayBet);
+                    if(bet == game.homeBet && (game.result != 'H') ||
+                       bet == game.awayBet && (game.result != 'A') ||
+                       bet == game.draftBet && (game.result != 'D'))
                         color = 'red';
-                    if(max == game.awayBet && game.result == 'H')
-                        color = 'red';
-                    if(max == game.draftBet)
-                        color = 'white'; //rever este caso
+                    if(bet == game.draftBet && game.result == 'D')
+                        color = 'grey';
                 }
                 
                 var c = {'id': 'id','cx': x, 'cy': y, 'r': sc.radius, 'color': color, 'homeGoals': game.homeGoals,
