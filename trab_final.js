@@ -115,7 +115,7 @@ myApp.readData = function()
         myApp.populateTeamsData();
         myApp.populateCombo();        
         myApp.createScoreBoard();
-        myApp.printTable();
+//        myApp.printTable();
         myApp.createTimeSeries();
         myApp.createBarsGraph();
     });
@@ -405,7 +405,7 @@ myApp.populateTeamsData = function()
 
 myApp.select = function()
 {
-    myApp.printTable();
+//    myApp.printTable();
     myApp.updateBars();
 }
 
@@ -969,7 +969,7 @@ myApp.createRectsDataBarsGraph = function()
                             generalLosts++;
                             if(homeTeam == selectedTeam){
                                 teamLosts++; 
-                                totalSelectedTeam
+                                totalSelectedTeam++;
                             }
                         }
                         else{
