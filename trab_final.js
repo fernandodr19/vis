@@ -925,6 +925,7 @@ myApp.createRectsDataBarsGraph = function()
     var totalGames   = 0;
     var bestTeamWins = 0;
     var selectedTeam = document.getElementById("selectTeam").value;
+    var totalSelectedTeam = 0;
     
     for(var i = 0; i < teamNames.length; i++) {
         for(var j = 0; j < teamNames.length; j++) {
@@ -943,19 +944,25 @@ myApp.createRectsDataBarsGraph = function()
                 if(dataJogo < maxDate && dataJogo > minDate){
                     if(game.result == 'H'){
                         generalWins++;
-                        if(homeTeam == selectedTeam)
-                            teamWins++;                    
+                        if(homeTeam == selectedTeam){
+                            teamWins++;
+                            totalSelectedTeam++;
+                        }      
                     }
                     else{ 
                         if(game.result == 'A'){
                             generalLosts++;
-                            if(homeTeam == selectedTeam)
-                                teamLosts++;                        
+                            if(homeTeam == selectedTeam){
+                                teamLosts++; 
+                                totalSelectedTeam
+                            }
                         }
                         else{
                             generalDraws++;
-                            if(homeTeam == selectedTeam)
-                                teamDraws++;                        
+                            if(homeTeam == selectedTeam){
+                                teamDraws++;
+                                totalSelectedTeam++;
+                            }                        
                         }
                     }
                     totalGames++;
@@ -979,15 +986,15 @@ myApp.createRectsDataBarsGraph = function()
     
     var rectWin = {'x': 10, 'y': 0, 'width': 25, 'height': (generalWins/totalGames)*100, 'color': 'green'};
     rects.push(rectWin);
-    var rectTeamWin = {'x': 70, 'y': 0, 'width': 25, 'height': (teamWins/totalGames)*100, 'color': 'green'};
+    var rectTeamWin = {'x': 70, 'y': 0, 'width': 25, 'height': (teamWins/totalSelectedTeam)*100, 'color': 'green'};
     rects.push(rectTeamWin);
     var rectLost = {'x': 130, 'y': 0, 'width': 25, 'height': (generalLosts/totalGames)*100, 'color': 'red'};
     rects.push(rectLost);
-    var rectTeamLost = {'x': 190, 'y': 0, 'width': 25, 'height': (teamLosts/totalGames)*100, 'color': 'red'};
+    var rectTeamLost = {'x': 190, 'y': 0, 'width': 25, 'height': (teamLosts/totalSelectedTeam)*100, 'color': 'red'};
     rects.push(rectTeamLost);
     var rectDraw = {'x': 250, 'y': 0, 'width': 25, 'height': (generalDraws/totalGames)*100, 'color': 'gray'};
     rects.push(rectDraw);        
-    var rectTeamDraw = {'x': 310, 'y': 0, 'width': 25, 'height': (teamDraws/totalGames)*100, 'color': 'gray'};
+    var rectTeamDraw = {'x': 310, 'y': 0, 'width': 25, 'height': (teamDraws/totalSelectedTeam)*100, 'color': 'gray'};
     rects.push(rectTeamDraw);
     
     bars.rectList = rects;
