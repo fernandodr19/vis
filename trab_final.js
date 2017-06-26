@@ -35,11 +35,11 @@ sc.scoreBoardSizeY = sc.baseY + 20*sc.variationY + 50;
 var lineChart = {};
 lineChart.margins       = {top: 20, right: 300, bottom: 110, left: 40};
 lineChart.margins2      = {top: 430, right: 20, bottom: 30, left: 40};
-lineChart.cw            = 960 - lineChart.margins.left - lineChart.margins.right;
+lineChart.cw            = 1260 - lineChart.margins.left - lineChart.margins.right;
 lineChart.ch            = 500 - lineChart.margins.top - lineChart.margins.bottom;
 lineChart.ch2           = 500 - lineChart.margins2.top - lineChart.margins2.bottom;
 lineChart.xLabel        = "Dates";
-lineChart.yLabel        = "Points";
+lineChart.yLabel        = "Position";
 lineChart.xScale        = undefined;
 lineChart.xScale2       = undefined;
 lineChart.yScale        = undefined;
@@ -412,18 +412,28 @@ myApp.select = function()
 myApp.sortByTotalPoints = function(date)
 {
     teamNames.sort(function(a, b) {
-        return parseFloat(myApp.getTotalScore(teamGames[b][myApp.indexOfDate(b,date)].results)) 
+        return myApp.getTotalScoreByDate(b, date)
             - 
-            parseFloat(myApp.getTotalScore(teamGames[a][myApp.indexOfDate(a,date)].results));
+            myApp.getTotalScoreByDate(a, date);
     });    
 }
+
+myApp.getTotalScoreByDate = function(name, date)
+{
+    var index = myApp.indexOfDate(name,date);
+    
+    if(index == -1)
+        return 0;
+    
+    return parseFloat(myApp.getTotalScore(teamGames[name][index].results));
+}
+
 
 myApp.printTable = function()
 {
     
     var myTable= '<table class="table"><tr><th>Team</th>';
     myTable+= "<th>Points</th>";
-    myTable+="<th>Goals Pro</th></tr>";
     var selectedTeam = document.getElementById("selectTeam").value;    
     
     var date = document.getElementById("selectDate");
@@ -449,7 +459,6 @@ myApp.printTable = function()
             myTable+="<td> - </td>";
         else
             myTable+="<td>" + myApp.getTotalScore(teamGames[name][index].results) + "</td>";
-        myTable+="<td>" + 10 + "</td></tr>";
     }
     
     myTable+="</table>";
@@ -571,31 +580,36 @@ myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
     }
     
     x.domain(d3.extent(totalDates, function(d) { return d; }));        
-    y.domain([0, Math.max.apply(null, totalValues)]);
+//    y.domain([0, Math.max.apply(null, totalValues)]);    
+    y.domain([teamNames.length, 1]);
     x2.domain(x.domain());
     y2.domain(y.domain());
     
     var dates  = [];        
     var values = [];         
-    
+    console.log("---------------------------------------------------------------------");
     var count = -1;
-    for(var teamName in teamNames){
+    for(var teamName in chartObject.legend){
         count++;
-        var name = teamNames[teamName];
+        var name = chartObject.legend[teamName];
         var data = [];
         for(var i = 0; i < teamGames[name].length; i++) {
             dates.push(teamGames[name][i].date);
             var from = teamGames[name][i].date.split("/");    
             var teamDate = new Date("20" + from[2], from[1]-1, from[0]);   
             var index = myApp.indexOfDate(name,teamGames[name][i].date);
-            values.push(myApp.getTotalScore(teamGames[name][i].results));   
-            var d = {date: teamDate, value: myApp.getTotalScore(teamGames[name][i].results)};
+            values.push(myApp.getTotalScore(teamGames[name][i].results)); 
+                        
+            myApp.sortByTotalPoints(teamDate);
+            console.log(name + ": " + (teamNames.indexOf(name) + 1));
+            
+            var d = {date: teamDate, value: (teamNames.indexOf(name) + 1)};//myApp.getTotalScore(teamGames[name][i].results)};
             data.push(d);
         }        
         
         var line = d3.line()
         .x(function(d) { return x(d.date); })
-        .y(function(d) { return y(d.value); });
+        .y(function(d) { console.log(name + "("+chartObject.legend[count] + "): " + d.value);return y(d.value); });
         
         var line2 = d3.line()
         .x(function(d) { return x2(d.date); })
@@ -606,7 +620,7 @@ myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
              .attr("class", "line"+count)
              .attr("d", line)
              .style("fill", "none")
-             .style("stroke", chartObject.colorScale(chartObject.legend[count]))
+             .style("stroke", chartObject.colorScale(name))
              .style("stroke-width", "2px");                            
         
         context.append("path")
@@ -614,9 +628,10 @@ myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
                .attr("class", "line"+count)
                .attr("d", line2)
                .style("fill", "none")
-               .style("stroke", chartObject.colorScale(chartObject.legend[count]))
+               .style("stroke", chartObject.colorScale(name))
                .style("stroke-width", "2px");
-    }   
+    }  
+    console.log("---------------------------------------------------------------------");
     
         
     var rect1 = focus.append('rect')
