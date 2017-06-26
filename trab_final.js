@@ -688,6 +688,7 @@ myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
         
         minDate = t.rescaleX(x2).domain()[0];
         maxDate = t.rescaleX(x2).domain()[1];
+        myApp.updateBars();
         
         var i;        
         for(i = 0; i < teamNames.length; i++){            
@@ -847,18 +848,18 @@ myApp.createAxesBarsGraph = function(svg)
 myApp.updateXAxis = function(div)
 {
     var p = [];
-    var textWin = {"text": "Wins", "x": bars.rectList[0].x};
-    var textLost = {"text": "Losts", "x": bars.rectList[1].x};
-    var textDraw = {"text": "Draws", "x": bars.rectList[2].x};
-    var textTeamWin = {"text": "Team Wins", "x": bars.rectList[3].x};
-    var textTeamLost = {"text": "Team Losts", "x": bars.rectList[4].x};
-    var textTeamDraw = {"text": "Team Draws", "x": bars.rectList[5].x};
+    var textWin = {"text": "Geral", "x": bars.rectList[0].x};
+    var textLost = {"text": "Geral", "x": bars.rectList[2].x};
+    var textDraw = {"text": "Geral", "x": bars.rectList[4].x};
+    var textTeamWin = {"text": "Time", "x": bars.rectList[1].x};
+    var textTeamLost = {"text": "Time", "x": bars.rectList[3].x};
+    var textTeamDraw = {"text": "Time", "x": bars.rectList[5].x};
 
     p.push(textWin);
-    p.push(textLost);
-    p.push(textDraw);
     p.push(textTeamWin);
+    p.push(textLost);
     p.push(textTeamLost);
+    p.push(textDraw);        
     p.push(textTeamDraw);
 
     var genW = div
@@ -868,25 +869,18 @@ myApp.updateXAxis = function(div)
         .attr('x', function(d){ return textWin.x + bars.margins.left; })
         .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
     
-    var genL = div
-        .append('text')
-        .text(function(d){ return textLost.text})
-        .attr('class', 'label')
-        .attr('x', function(d){ return textLost.x + bars.margins.left; })
-        .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
-    
-    var genD = div
-        .append('text')
-        .text(function(d){ return textDraw.text})
-        .attr('class', 'label')
-        .attr('x', function(d){ return textDraw.x + bars.margins.left; })
-        .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
-    
     var teamW = div
         .append('text')
         .text(function(d){ return textTeamWin.text})
         .attr('class', 'label')
         .attr('x', function(d){ return textTeamWin.x + bars.margins.left; })
+        .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
+    
+    var genL = div
+        .append('text')
+        .text(function(d){ return textLost.text})
+        .attr('class', 'label')
+        .attr('x', function(d){ return textLost.x + bars.margins.left; })
         .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
     
     var teamL = div
@@ -896,6 +890,13 @@ myApp.updateXAxis = function(div)
         .attr('x', function(d){ return textTeamLost.x + bars.margins.left; })
         .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
     
+    var genD = div
+        .append('text')
+        .text(function(d){ return textDraw.text})
+        .attr('class', 'label')
+        .attr('x', function(d){ return textDraw.x + bars.margins.left; })
+        .attr('y', function(d){ return bars.ch + bars.margins.top + 20; });
+            
     var teamD = div
         .append('text')
         .text(function(d){ return textTeamDraw.text})
@@ -932,50 +933,61 @@ myApp.createRectsDataBarsGraph = function()
             var gameIndex = myApp.indexOfGame(homeTeam, awayTeam);
             if(gameIndex != -1) {
                 var game = games[gameIndex];
-                if(game.result == 'H'){
-                    generalWins++;
-                    if(homeTeam == selectedTeam)
-                        teamWins++;                    
-                }
-                else{ 
-                    if(game.result == 'A'){
-                        generalLosts++;
+                /*CONVERSAO DE DATAS*/
+                var date = game.date;
+                date = date.replace('/','-');
+                date = date.replace('/','-');
+                date = moment(date,"DD-MM-YY").format("MM-DD-YY");
+                var dataJogo = new Date(date);
+                /*FIM CONVERSAO*/
+                if(dataJogo < maxDate && dataJogo > minDate){
+                    if(game.result == 'H'){
+                        generalWins++;
                         if(homeTeam == selectedTeam)
-                            teamLosts++;                        
+                            teamWins++;                    
                     }
-                    else{
-                        generalDraws++;
-                        if(homeTeam == selectedTeam)
-                            teamDraws++;                        
+                    else{ 
+                        if(game.result == 'A'){
+                            generalLosts++;
+                            if(homeTeam == selectedTeam)
+                                teamLosts++;                        
+                        }
+                        else{
+                            generalDraws++;
+                            if(homeTeam == selectedTeam)
+                                teamDraws++;                        
+                        }
                     }
+                    totalGames++;
                 }
-                totalGames++;
             }   
         }
         if(bestTeamWins < teamWins)
             bestTeamWins = teamWins;        
     }
     
-    if(generalWins >= generalLosts && generalWins >= generalDraws)
+    /*if(generalWins >= generalLosts && generalWins >= generalDraws)
         bars.maxY = generalWins;
     else if(generalLosts >= generalDraws)
         bars.maxY = generalLosts;
     else
-        bars.maxY = generalDraws;
+        bars.maxY = generalDraws;*/
+    
+    bars.maxY = 100;
             
     console.log("General Wins: " + generalWins);
     
-    var rectWin = {'x': 10, 'y': 0, 'width': 25, 'height': generalWins, 'color': 'green'};
+    var rectWin = {'x': 10, 'y': 0, 'width': 25, 'height': (generalWins/totalGames)*100, 'color': 'green'};
     rects.push(rectWin);
-    var rectLost = {'x': 70, 'y': 0, 'width': 25, 'height': generalLosts, 'color': 'red'};
-    rects.push(rectLost);
-    var rectDraw = {'x': 130, 'y': 0, 'width': 25, 'height': generalDraws, 'color': 'gray'};
-    rects.push(rectDraw);
-    var rectTeamWin = {'x': 190, 'y': 0, 'width': 25, 'height': teamWins, 'color': 'green'};
+    var rectTeamWin = {'x': 70, 'y': 0, 'width': 25, 'height': (teamWins/totalGames)*100, 'color': 'green'};
     rects.push(rectTeamWin);
-    var rectTeamLost = {'x': 250, 'y': 0, 'width': 25, 'height': teamLosts, 'color': 'red'};
+    var rectLost = {'x': 130, 'y': 0, 'width': 25, 'height': (generalLosts/totalGames)*100, 'color': 'red'};
+    rects.push(rectLost);
+    var rectTeamLost = {'x': 190, 'y': 0, 'width': 25, 'height': (teamLosts/totalGames)*100, 'color': 'red'};
     rects.push(rectTeamLost);
-    var rectTeamDraw = {'x': 310, 'y': 0, 'width': 25, 'height': teamDraws, 'color': 'gray'};
+    var rectDraw = {'x': 250, 'y': 0, 'width': 25, 'height': (generalDraws/totalGames)*100, 'color': 'gray'};
+    rects.push(rectDraw);        
+    var rectTeamDraw = {'x': 310, 'y': 0, 'width': 25, 'height': (teamDraws/totalGames)*100, 'color': 'gray'};
     rects.push(rectTeamDraw);
     
     bars.rectList = rects;
