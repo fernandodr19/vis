@@ -35,7 +35,7 @@ sc.scoreBoardSizeY = sc.baseY + 20*sc.variationY + 50;
 var lineChart = {};
 lineChart.margins       = {top: 20, right: 300, bottom: 110, left: 40};
 lineChart.margins2      = {top: 430, right: 20, bottom: 30, left: 40};
-lineChart.cw            = 1260 - lineChart.margins.left - lineChart.margins.right;
+lineChart.cw            = 1000 - lineChart.margins.left - lineChart.margins.right;
 lineChart.ch            = 500 - lineChart.margins.top - lineChart.margins.bottom;
 lineChart.ch2           = 500 - lineChart.margins2.top - lineChart.margins2.bottom;
 lineChart.xLabel        = "Dates";
@@ -115,7 +115,7 @@ myApp.readData = function()
         myApp.populateTeamsData();
         myApp.populateCombo();        
         myApp.createScoreBoard();
-//        myApp.printTable();
+        myApp.printTable();
         myApp.createTimeSeries();
         myApp.createBarsGraph();
     });
@@ -123,6 +123,7 @@ myApp.readData = function()
 
 myApp.createScoreBoard = function()
 {
+    d3.select("svg").remove();
     var svg = myApp.appendSvg("#mainDiv", 200, 750);
     var cht = myApp.appendChartGroup(svg); 
     
@@ -240,44 +241,53 @@ myApp.createCirclesData = function(offSetX, offSetY, type)
             var homeTeam = teamNames[i];
             var awayTeam = teamNames[j];
             var gameIndex = myApp.indexOfGame(homeTeam, awayTeam);
+            
+            
+            
             if(gameIndex != -1) {
+                
                 var game = games[gameIndex];
-                var x = sc.baseX + sc.variationX * j + offSetX;
-                var y = sc.baseY + sc.variationY * i + offSetY;
-                var color = 'grey';
+                var from =  game.date.split("/");    
+                var gameDate = new Date("20" + from[2], from[1]-1, from[0]); 
                 
-                if(type == 'victories') {
-                    if(game.result == 'H')
-                        color = 'green';
-                    else if(game.result == 'A')
-                        color = 'red';
-                }
-                
-                if(type == 'bets') {
-                    var bet = Math.min(game.homeBet, game.draftBet, game.awayBet);
-                    if(bet == game.homeBet)
-                        color = 'green';
-                    if(bet == game.awayBet)
-                        color = 'red';
-                    if(bet == game.draftBet)
-                        color = 'grey';
-                }
-                
-                if(type == 'diff') {
-                    color = 'green';
+                if((minDate == undefined)||(maxDate == undefined)||((gameDate > minDate)&&(gameDate < maxDate))){
+                    var x = sc.baseX + sc.variationX * j + offSetX;
+                    var y = sc.baseY + sc.variationY * i + offSetY;
+                    var color = 'grey';
                     
-                    var bet = Math.min(game.homeBet, game.draftBet, game.awayBet);
-                    if(bet == game.homeBet && (game.result != 'H') ||
-                       bet == game.awayBet && (game.result != 'A') ||
-                       bet == game.draftBet && (game.result != 'D'))
-                        color = 'red';
-                    if(bet == game.draftBet && game.result == 'D')
-                        color = 'grey';
+                    if(type == 'victories') {
+                        if(game.result == 'H')
+                            color = 'green';
+                        else if(game.result == 'A')
+                            color = 'red';
+                    }
+                    
+                    if(type == 'bets') {
+                        var bet = Math.min(game.homeBet, game.draftBet, game.awayBet);
+                        if(bet == game.homeBet)
+                            color = 'green';
+                        if(bet == game.awayBet)
+                            color = 'red';
+                        if(bet == game.draftBet)
+                            color = 'grey';
+                    }
+                    
+                    if(type == 'diff') {
+                        color = 'green';
+                        
+                        var bet = Math.min(game.homeBet, game.draftBet, game.awayBet);
+                        if(bet == game.homeBet && (game.result != 'H') ||
+                           bet == game.awayBet && (game.result != 'A') ||
+                           bet == game.draftBet && (game.result != 'D'))
+                            color = 'red';
+                        if(bet == game.draftBet && game.result == 'D')
+                            color = 'grey';
+                    }
+                    
+                    var c = {'id': 'id','cx': x, 'cy': y, 'r': sc.radius, 'color': color, 'homeGoals': game.homeGoals,
+                             'awayGoals': game.awayGoals, 'date': game.date};
+                    circles.push(c);
                 }
-                
-                var c = {'id': 'id','cx': x, 'cy': y, 'r': sc.radius, 'color': color, 'homeGoals': game.homeGoals,
-                         'awayGoals': game.awayGoals, 'date': game.date};
-                circles.push(c);
             }   
         }
     }
@@ -405,7 +415,7 @@ myApp.populateTeamsData = function()
 
 myApp.select = function()
 {
-//    myApp.printTable();
+    myApp.printTable();
     myApp.updateBars();
 }
 
@@ -434,12 +444,14 @@ myApp.printTable = function()
     
     var myTable= '<table class="table"><tr><th>Team</th>';
     myTable+= "<th>Points</th>";
-    var selectedTeam = document.getElementById("selectTeam").value;    
+    var selectedTeam = document.getElementById("selectTeam").value;            
+        
+    var inputDate;
+    if(maxDate == undefined)
+        inputDate = new Date();
+    else
+        inputDate = maxDate; 
     
-    var date = document.getElementById("selectDate");
-    
-    var from = date.value.split("-");
-    var inputDate = new Date(from[0], from[1]-1, from[2]); 
     myApp.sortByTotalPoints(inputDate);
     var formatDate = ("0" + inputDate.getDate()).slice(-2) + "/" + ("0" + (inputDate.getMonth() + 1)).slice(-2) + "/" + ("0" + inputDate.getFullYear()).slice(-2);
     
@@ -563,8 +575,7 @@ myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
     var context = svg.append("g")
     .attr("class", "context")
     .attr("transform", "translate(" + chartObject.margins2.left + "," + chartObject.margins2.top + ")");       
-    
-    ///////////////////////////////////////////////////////////////////////////////////////////////////     
+           
     var totalDates  = [];        
     var totalValues = []; 
     
@@ -579,15 +590,13 @@ myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
         }      
     }
     
-    x.domain(d3.extent(totalDates, function(d) { return d; }));        
-//    y.domain([0, Math.max.apply(null, totalValues)]);    
+    x.domain(d3.extent(totalDates, function(d) { return d; }));    
     y.domain([teamNames.length, 1]);
     x2.domain(x.domain());
     y2.domain(y.domain());
     
     var dates  = [];        
-    var values = [];         
-    console.log("---------------------------------------------------------------------");
+    var values = [];     
     var count = -1;
     for(var teamName in chartObject.legend){
         count++;
@@ -603,7 +612,7 @@ myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
             myApp.sortByTotalPoints(teamDate);
             console.log(name + ": " + (teamNames.indexOf(name) + 1));
             
-            var d = {date: teamDate, value: (teamNames.indexOf(name) + 1)};//myApp.getTotalScore(teamGames[name][i].results)};
+            var d = {date: teamDate, value: (teamNames.indexOf(name) + 1)};
             data.push(d);
         }        
         
@@ -631,7 +640,6 @@ myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
                .style("stroke", chartObject.colorScale(name))
                .style("stroke-width", "2px");
     }  
-    console.log("---------------------------------------------------------------------");
     
         
     var rect1 = focus.append('rect')
@@ -694,6 +702,9 @@ myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
         svg.select(".zoom").call(zoom.transform, d3.zoomIdentity
                                  .scale(chartObject.cw / (s[1] - s[0]))
                                  .translate(-s[0], 0));
+        
+        myApp.createScoreBoard();
+        myApp.printTable();
     }
     
     function zoomed() {
@@ -713,6 +724,9 @@ myApp.createTimeSeriesData = function(filename, chartObject, svg, cht)
         }
         focus.select(".axis--x").call(xAxis);
         context.select(".brush").call(brush.move, x.range().map(t.invertX, t));
+        
+        myApp.createScoreBoard();
+        myApp.printTable();
     }        
 }
 
@@ -752,13 +766,13 @@ myApp.appendLegend = function(chartObject, div)
                   .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
     
     legend.append("rect")
-      .attr("x", chartObject.cw + 300)
+      .attr("x", chartObject.cw + 170)      
       .attr("width", 19)
       .attr("height", 19)
       .attr("fill", chartObject.colorScale);
 
     legend.append("text")
-      .attr("x", chartObject.cw + 295)
+      .attr("x", chartObject.cw + 165)
       .attr("y", 9.5)
       .attr("dy", "0.32em")
       .text(function(d) { return d; });

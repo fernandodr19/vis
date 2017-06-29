@@ -41,3 +41,14 @@ div.tooltip {
   border-radius: 8px;
   pointer-events: none;
 }
+
+.left {
+    float: left;
+    width: 50%;
+}
+
+.right {
+    float: right;
+    width: 880px;
+    margin-top: 160px;
+}

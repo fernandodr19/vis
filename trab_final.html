@@ -21,23 +21,24 @@
 </head>
 
 <body>
-    <div class="container">
+    <div style="margin-left:0px !important; margin-right:0px !important;">        
         <div class="col-md-12" style="margin-bottom: 50px;">
-            <select id="selectTeam" class="form-control" style="display: inline; width: 200px;">
+            <button type="button" onclick="myApp.select()" class="btn btn-primary" style="float:right;">Select</button>
+            <select id="selectTeam" class="form-control" style="float:right; display: inline; width: 200px;">
             </select>
-<!--            <input class="form-control" type="date" id="selectDate" style="display: inline; width: 200px;">-->
-            <button type="button" onclick="myApp.select()" class="btn btn-primary">Select</button>
+<!--            <input class="form-control" type="date" id="selectDate" style="display: inline; width: 200px;">-->            
         </div>
         <!--<div id="blanckDiv" class="col-md-6"><br><br></div>-->
         
 <!--        <div align="center" id="tableDiv" class="col-md-12"></div>-->
-        
-        
-        <div id="mainDiv" class="col-md-12"></div> 
-        
-        <div id="barsDiv" class="col-md-6" style="margin-left: 20px;"></div>
-        
-        <div id="chartDiv" class="col-md-12"></div>
+        <div class="left">        
+            <div id="mainDiv" class="col-md-12"></div>  
+        </div>
+        <div class="right">
+            <div id="chartDiv" class="col-md-12"></div>        
+            <div id="barsDiv" class="col-md-12" style="text-align: center; margin-left: 20px;"></div>
+        </div>
+        <div align="center" id="tableDiv" class="col-md-6"></div>
     </div>
     
 </body>
